@@ -51,8 +51,7 @@ export function CoursePlayer({
   onBack,
 }: CoursePlayerProps) {
   const isMobile = useIsMobile()
-  const { playerMode, setScrollTarget } = useCoursePlayerState()
-  const { setAskQuestionOpen, setLeaderboardOpen } = useCoursePlayerState()
+  const { setScrollTarget, setAskQuestionOpen, setLeaderboardOpen } = useCoursePlayerState()
 
   const curriculumRef = useRef<HTMLDivElement>(null)
   const commentsRef = useRef<HTMLDivElement>(null)
@@ -102,13 +101,9 @@ export function CoursePlayer({
             <h1 className="text-3xl font-bold text-slate-900 mb-8">{courseName}</h1>
 
             {/* Main Content Grid */}
-            <div
-              className={`grid gap-8 ${
-                playerMode === 'wide' ? 'grid-cols-1' : 'grid-cols-3 lg:grid-cols-4'
-              }`}
-            >
+            <div className="grid gap-8 grid-cols-3 lg:grid-cols-4">
               {/* Player and Content Column */}
-              <div className={playerMode === 'wide' ? 'col-span-1' : 'col-span-3'}>
+              <div className="col-span-3">
                 {/* Player Container */}
                 <div className="rounded-lg overflow-hidden bg-black mb-4 border border-slate-200">
                   <Player videoUrl={videoUrl} isMobile={false} />
@@ -137,19 +132,17 @@ export function CoursePlayer({
                 </div>
               </div>
 
-              {/* Sidebar - Only visible in normal mode */}
-              {playerMode !== 'wide' && playerMode !== 'fullscreen' && (
-                <div className="col-span-1 h-fit">
-                  <div className="bg-slate-50 rounded-lg p-6 border border-slate-200">
-                    <h3 className="font-semibold text-slate-900 mb-4">Topics for This Course</h3>
-                    <div className="space-y-3">
-                      <div className="h-6 bg-slate-200 rounded w-3/4" />
-                      <div className="h-6 bg-slate-200 rounded w-4/5" />
-                      <div className="h-6 bg-slate-200 rounded w-2/3" />
-                    </div>
+              {/* Sidebar */}
+              <div className="col-span-1 h-fit">
+                <div className="bg-slate-50 rounded-lg p-6 border border-slate-200">
+                  <h3 className="font-semibold text-slate-900 mb-4">Topics for This Course</h3>
+                  <div className="space-y-3">
+                    <div className="h-6 bg-slate-200 rounded w-3/4" />
+                    <div className="h-6 bg-slate-200 rounded w-4/5" />
+                    <div className="h-6 bg-slate-200 rounded w-2/3" />
                   </div>
                 </div>
-              )}
+              </div>
             </div>
           </div>
         </div>
@@ -165,38 +158,20 @@ export function CoursePlayer({
 
       <div className="min-h-screen bg-white pb-20">
         {/* Sticky Player Header */}
-        {playerMode !== 'fullscreen' && (
-          <StickyHeader onBack={onBack}>
-            <div className="w-full space-y-2">
-              <div className="rounded-lg overflow-hidden bg-black h-40 border border-slate-200">
-                <Player videoUrl={videoUrl} isMobile={true} />
-              </div>
-              <PlayerControls
-                isMobile={true}
-                onCurriculumClick={handleCurriculumClick}
-                onCommentsClick={handleCommentsClick}
-                onAskQuestionClick={handleAskQuestionClick}
-                onLeaderboardClick={handleLeaderboardClick}
-              />
+        <StickyHeader onBack={onBack}>
+          <div className="w-full space-y-2">
+            <div className="rounded-lg overflow-hidden bg-black h-40 border border-slate-200">
+              <Player videoUrl={videoUrl} isMobile={true} />
             </div>
-          </StickyHeader>
-        )}
-
-        {/* Fullscreen Player */}
-        {playerMode === 'fullscreen' && (
-          <div className="fixed inset-0 z-50 bg-black">
-            <Player videoUrl={videoUrl} isMobile={true} />
-            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-4">
-              <PlayerControls
-                isMobile={true}
-                onCurriculumClick={handleCurriculumClick}
-                onCommentsClick={handleCommentsClick}
-                onAskQuestionClick={handleAskQuestionClick}
-                onLeaderboardClick={handleLeaderboardClick}
-              />
-            </div>
+            <PlayerControls
+              isMobile={true}
+              onCurriculumClick={handleCurriculumClick}
+              onCommentsClick={handleCommentsClick}
+              onAskQuestionClick={handleAskQuestionClick}
+              onLeaderboardClick={handleLeaderboardClick}
+            />
           </div>
-        )}
+        </StickyHeader>
 
         {/* Page Content */}
         <div className="px-4 py-6">
