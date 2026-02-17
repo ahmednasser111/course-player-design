@@ -51,7 +51,7 @@ export function CoursePlayer({
   onBack,
 }: CoursePlayerProps) {
   const isMobile = useIsMobile()
-  const { setScrollTarget, setAskQuestionOpen, setLeaderboardOpen } = useCoursePlayerState()
+  const { playerMode, setScrollTarget, setAskQuestionOpen, setLeaderboardOpen } = useCoursePlayerState()
 
   const curriculumRef = useRef<HTMLDivElement>(null)
   const commentsRef = useRef<HTMLDivElement>(null)
@@ -97,54 +97,86 @@ export function CoursePlayer({
             </div>
           </nav>
 
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <h1 className="text-3xl font-bold text-slate-900 mb-8">{courseName}</h1>
+          {/* Player Container - Full Width in Wide/Fullscreen Mode */}
+          {playerMode === 'wide' && (
+            <div className="px-4 sm:px-6 lg:px-8 py-8">
+              <div className="rounded-lg overflow-hidden bg-black mb-4 border border-slate-200">
+                <Player videoUrl={videoUrl} isMobile={false} />
+              </div>
+              <PlayerControls
+                isMobile={false}
+                onCurriculumClick={handleCurriculumClick}
+                onCommentsClick={handleCommentsClick}
+                onAskQuestionClick={handleAskQuestionClick}
+                onLeaderboardClick={handleLeaderboardClick}
+              />
+            </div>
+          )}
 
-            {/* Main Content Grid */}
-            <div className="grid gap-8 grid-cols-3 lg:grid-cols-4">
-              {/* Player and Content Column */}
-              <div className="col-span-3">
-                {/* Player Container */}
-                <div className="rounded-lg overflow-hidden bg-black mb-4 border border-slate-200">
-                  <Player videoUrl={videoUrl} isMobile={false} />
+          {/* Normal and Standard Layout */}
+          {playerMode !== 'wide' && (
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+              <h1 className="text-3xl font-bold text-slate-900 mb-8">{courseName}</h1>
+
+              {/* Main Content Grid */}
+              <div className="grid gap-8 grid-cols-3 lg:grid-cols-4">
+                {/* Player and Content Column */}
+                <div className="col-span-3">
+                  {/* Player Container */}
+                  <div className="rounded-lg overflow-hidden bg-black mb-4 border border-slate-200">
+                    <Player videoUrl={videoUrl} isMobile={false} />
+                  </div>
+
+                  {/* Player Controls */}
+                  <PlayerControls
+                    isMobile={false}
+                    onCurriculumClick={handleCurriculumClick}
+                    onCommentsClick={handleCommentsClick}
+                    onAskQuestionClick={handleAskQuestionClick}
+                    onLeaderboardClick={handleLeaderboardClick}
+                  />
+
+                  {/* Content Sections */}
+                  <div className="mt-12 space-y-16">
+                    {/* Curriculum Section */}
+                    {curriculum.length > 0 && (
+                      <CurriculumSection weeks={curriculum} ref={curriculumRef} />
+                    )}
+
+                    {/* Comments Section */}
+                    {comments.length > 0 && (
+                      <CommentsSection comments={comments} ref={commentsRef} />
+                    )}
+                  </div>
                 </div>
 
-                {/* Player Controls */}
-                <PlayerControls
-                  isMobile={false}
-                  onCurriculumClick={handleCurriculumClick}
-                  onCommentsClick={handleCommentsClick}
-                  onAskQuestionClick={handleAskQuestionClick}
-                  onLeaderboardClick={handleLeaderboardClick}
-                />
+                {/* Sidebar */}
+                <div className="col-span-1 h-fit">
+                  <div className="bg-slate-50 rounded-lg p-6 border border-slate-200">
+                    <h3 className="font-semibold text-slate-900 mb-4">Topics for This Course</h3>
+                    <div className="space-y-3">
+                      <div className="h-6 bg-slate-200 rounded w-3/4" />
+                      <div className="h-6 bg-slate-200 rounded w-4/5" />
+                      <div className="h-6 bg-slate-200 rounded w-2/3" />
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-                {/* Content Sections */}
+              {/* Content Below Wide Mode */}
+              {playerMode === 'wide' && (
                 <div className="mt-12 space-y-16">
-                  {/* Curriculum Section */}
+                  <h1 className="text-3xl font-bold text-slate-900">{courseName}</h1>
                   {curriculum.length > 0 && (
                     <CurriculumSection weeks={curriculum} ref={curriculumRef} />
                   )}
-
-                  {/* Comments Section */}
                   {comments.length > 0 && (
                     <CommentsSection comments={comments} ref={commentsRef} />
                   )}
                 </div>
-              </div>
-
-              {/* Sidebar */}
-              <div className="col-span-1 h-fit">
-                <div className="bg-slate-50 rounded-lg p-6 border border-slate-200">
-                  <h3 className="font-semibold text-slate-900 mb-4">Topics for This Course</h3>
-                  <div className="space-y-3">
-                    <div className="h-6 bg-slate-200 rounded w-3/4" />
-                    <div className="h-6 bg-slate-200 rounded w-4/5" />
-                    <div className="h-6 bg-slate-200 rounded w-2/3" />
-                  </div>
-                </div>
-              </div>
+              )}
             </div>
-          </div>
+          )}
         </div>
       </>
     )
@@ -156,13 +188,15 @@ export function CoursePlayer({
       <AskQuestionModal />
       <LeaderboardModal courseName={courseName} progressPercentage={progressPercentage} />
 
-      <div className="min-h-screen bg-white pb-20">
-        {/* Sticky Player Header */}
-        <StickyHeader onBack={onBack}>
-          <div className="w-full space-y-2">
-            <div className="rounded-lg overflow-hidden bg-black h-40 border border-slate-200">
+      {/* Fullscreen Mode */}
+      {playerMode === 'fullscreen' && (
+        <div className="fixed inset-0 z-50 bg-black flex flex-col">
+          <div className="flex-1 flex items-center justify-center">
+            <div className="w-full h-full">
               <Player videoUrl={videoUrl} isMobile={true} />
             </div>
+          </div>
+          <div className="bg-black border-t border-slate-700">
             <PlayerControls
               isMobile={true}
               onCurriculumClick={handleCurriculumClick}
@@ -171,25 +205,46 @@ export function CoursePlayer({
               onLeaderboardClick={handleLeaderboardClick}
             />
           </div>
-        </StickyHeader>
+        </div>
+      )}
 
-        {/* Page Content */}
-        <div className="px-4 py-6">
-          <h1 className="text-2xl font-bold text-slate-900 mb-8">{courseName}</h1>
+      {/* Normal Mobile Layout with Sticky Header */}
+      {playerMode !== 'fullscreen' && (
+        <div className="min-h-screen bg-white pb-20">
+          {/* Sticky Player Header */}
+          <StickyHeader onBack={onBack}>
+            <div className="w-full space-y-2">
+              <div className="rounded-lg overflow-hidden bg-black h-40 border border-slate-200">
+                <Player videoUrl={videoUrl} isMobile={true} />
+              </div>
+              <PlayerControls
+                isMobile={true}
+                onCurriculumClick={handleCurriculumClick}
+                onCommentsClick={handleCommentsClick}
+                onAskQuestionClick={handleAskQuestionClick}
+                onLeaderboardClick={handleLeaderboardClick}
+              />
+            </div>
+          </StickyHeader>
 
-          <div className="space-y-12">
-            {/* Curriculum Section */}
-            {curriculum.length > 0 && (
-              <CurriculumSection weeks={curriculum} isMobile={true} ref={curriculumRef} />
-            )}
+          {/* Page Content */}
+          <div className="px-4 py-6">
+            <h1 className="text-2xl font-bold text-slate-900 mb-8">{courseName}</h1>
 
-            {/* Comments Section */}
-            {comments.length > 0 && (
-              <CommentsSection comments={comments} ref={commentsRef} />
-            )}
+            <div className="space-y-12">
+              {/* Curriculum Section */}
+              {curriculum.length > 0 && (
+                <CurriculumSection weeks={curriculum} isMobile={true} ref={curriculumRef} />
+              )}
+
+              {/* Comments Section */}
+              {comments.length > 0 && (
+                <CommentsSection comments={comments} ref={commentsRef} />
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </>
   )
 }
