@@ -123,7 +123,7 @@ export default function Page() {
   return (
     <CoursePlayerProvider>
       <CoursePlayer
-        videoUrl="https://www.youtube.com/embed/dQw4w9WgXcQ"
+        videoUrl="https://www.youtube.com/embed/9BD9eK9VqXA?si=jd3ypHa8d5b9_eRz"
         courseName="Starting SEO as your Home"
         progressPercentage={45}
         curriculum={mockCurriculum}
