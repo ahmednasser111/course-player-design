@@ -3,13 +3,18 @@ import { Geist, Geist_Mono } from 'next/font/google'
 
 import './globals.css'
 
-const _geist = Geist({ subsets: ['latin'] })
-const _geistMono = Geist_Mono({ subsets: ['latin'] })
+const geistSans = Geist({
+  subsets: ['latin'],
+  variable: '--font-geist-sans',
+})
+const geistMono = Geist_Mono({
+  subsets: ['latin'],
+  variable: '--font-geist-mono',
+})
 
 export const metadata: Metadata = {
   title: 'Course Player Platform',
   description: 'Interactive course learning platform with video player, curriculum, and community features',
-  generator: 'v0.app',
 }
 
 export default function RootLayout({
@@ -18,7 +23,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body className="font-sans antialiased">{children}</body>
     </html>
   )

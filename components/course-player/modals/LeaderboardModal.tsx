@@ -38,7 +38,7 @@ export function LeaderboardModal({
       <DialogContent className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-center text-2xl">{courseName}</DialogTitle>
-          <p className="text-center text-lg font-bold text-blue-600 mt-2">Leaderboard</p>
+          <p className="text-center text-lg font-bold text-primary mt-2">Leaderboard</p>
         </DialogHeader>
 
         <div className="space-y-6">
@@ -85,7 +85,7 @@ export function LeaderboardModal({
           {/* Close Button */}
           <Button
             onClick={() => setLeaderboardOpen(false)}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
           >
             Close
           </Button>

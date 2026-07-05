@@ -1,15 +1,26 @@
 'use client'
 
-import { useRef, useEffect } from 'react'
-import { useIsMobile } from '@/hooks/use-mobile'
-import { Player } from './Player'
-import { PlayerControls } from './PlayerControls'
+import { useRef, useState } from 'react'
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb'
+import { PlayerSection } from './PlayerSection'
 import { StickyHeader } from './StickyHeader'
+import { CourseMaterials, type CourseMaterialsInfo } from './CourseMaterials'
+import { CourseProgress } from './CourseProgress'
 import { CurriculumSection } from './CurriculumSection'
 import { CommentsSection } from './CommentsSection'
 import { AskQuestionModal } from './modals/AskQuestionModal'
 import { LeaderboardModal } from './modals/LeaderboardModal'
+import { ExamModal } from './modals/ExamModal'
+import { PDFViewerModal } from './modals/PDFViewerModal'
 import { useCoursePlayerState } from '@/hooks/useCoursePlayerState'
+import { getExamById, type ExamData } from '@/lib/mock-exam-data'
 
 interface Comment {
   id: string
@@ -17,6 +28,7 @@ interface Comment {
   date: string
   content: string
   avatar?: string
+  rating?: number
 }
 
 interface CurriculumItem {
@@ -24,12 +36,15 @@ interface CurriculumItem {
   title: string
   duration?: string
   questions?: number
+  minutes?: number
   type?: 'lesson' | 'quiz'
   completed?: boolean
+  pdfUrl?: string
 }
 
 interface CurriculumWeek {
   week: string
+  description?: string
   items: CurriculumItem[]
 }
 
@@ -39,7 +54,21 @@ interface CoursePlayerProps {
   progressPercentage?: number
   curriculum?: CurriculumWeek[]
   comments?: Comment[]
+  materials?: CourseMaterialsInfo
   onBack?: () => void
+}
+
+interface PdfTarget {
+  title: string
+  url: string
+}
+
+const defaultMaterials: CourseMaterialsInfo = {
+  instructor: 'Instructor Name',
+  duration: '—',
+  lessons: 0,
+  enrolled: 0,
+  language: 'English',
 }
 
 export function CoursePlayer({
@@ -48,203 +77,108 @@ export function CoursePlayer({
   progressPercentage = 45,
   curriculum = [],
   comments = [],
+  materials = defaultMaterials,
   onBack,
 }: CoursePlayerProps) {
-  const isMobile = useIsMobile()
-  const { playerMode, setScrollTarget, setAskQuestionOpen, setLeaderboardOpen } = useCoursePlayerState()
+  const { playerMode, setAskQuestionOpen, setLeaderboardOpen } = useCoursePlayerState()
+  const isWide = playerMode === 'wide'
 
   const curriculumRef = useRef<HTMLDivElement>(null)
   const commentsRef = useRef<HTMLDivElement>(null)
 
+  const [activeExam, setActiveExam] = useState<ExamData | null>(null)
+  const [examModalOpen, setExamModalOpen] = useState(false)
+  const [activePdf, setActivePdf] = useState<PdfTarget | null>(null)
+  const [pdfModalOpen, setPdfModalOpen] = useState(false)
+
   const handleCurriculumClick = () => {
-    setScrollTarget('curriculum')
-    setTimeout(() => {
-      curriculumRef.current?.scrollIntoView({ behavior: 'smooth' })
-    }, 0)
+    curriculumRef.current?.scrollIntoView({ behavior: 'smooth' })
+    curriculumRef.current?.focus({ preventScroll: true })
   }
 
   const handleCommentsClick = () => {
-    setScrollTarget('comments')
-    setTimeout(() => {
-      commentsRef.current?.scrollIntoView({ behavior: 'smooth' })
-    }, 0)
+    commentsRef.current?.scrollIntoView({ behavior: 'smooth' })
+    commentsRef.current?.focus({ preventScroll: true })
   }
 
-  const handleAskQuestionClick = () => {
-    setAskQuestionOpen(true)
+  const handleQuizClick = (item: CurriculumItem) => {
+    const exam = getExamById(item.id, item.title, item.questions)
+    if (!exam) return
+    setActiveExam(exam)
+    setExamModalOpen(true)
   }
 
-  const handleLeaderboardClick = () => {
-    setLeaderboardOpen(true)
+  const handleResourceClick = (item: CurriculumItem) => {
+    if (!item.pdfUrl) return
+    setActivePdf({ title: item.title, url: item.pdfUrl })
+    setPdfModalOpen(true)
   }
 
-  // Desktop Layout
-  if (!isMobile) {
-    return (
-      <>
-        <AskQuestionModal />
-        <LeaderboardModal courseName={courseName} progressPercentage={progressPercentage} />
-
-        <div className="min-h-screen bg-white">
-          {/* Header Navigation */}
-          <nav className="border-b border-slate-200 bg-white sticky top-0 z-30">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center gap-2">
-              <span className="text-sm text-slate-600">Home</span>
-              <span className="text-slate-400">/</span>
-              <span className="text-sm text-slate-600">Courses</span>
-              <span className="text-slate-400">/</span>
-              <span className="text-sm font-medium text-slate-900">Course Details</span>
-            </div>
-          </nav>
-
-          {/* Player Container - Full Width in Wide/Fullscreen Mode */}
-          {playerMode === 'wide' && (
-            <div className="px-4 sm:px-6 lg:px-8 py-8">
-              <div className="rounded-lg overflow-hidden bg-black mb-4 border border-slate-200">
-                <Player videoUrl={videoUrl} isMobile={false} />
-              </div>
-              <PlayerControls
-                isMobile={false}
-                onCurriculumClick={handleCurriculumClick}
-                onCommentsClick={handleCommentsClick}
-                onAskQuestionClick={handleAskQuestionClick}
-                onLeaderboardClick={handleLeaderboardClick}
-              />
-            </div>
-          )}
-
-          {/* Normal and Standard Layout */}
-          {playerMode !== 'wide' && (
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-              <h1 className="text-3xl font-bold text-slate-900 mb-8">{courseName}</h1>
-
-              {/* Main Content Grid */}
-              <div className="grid gap-8 grid-cols-3 lg:grid-cols-4">
-                {/* Player and Content Column */}
-                <div className="col-span-3">
-                  {/* Player Container */}
-                  <div className="rounded-lg overflow-hidden bg-black mb-4 border border-slate-200">
-                    <Player videoUrl={videoUrl} isMobile={false} />
-                  </div>
-
-                  {/* Player Controls */}
-                  <PlayerControls
-                    isMobile={false}
-                    onCurriculumClick={handleCurriculumClick}
-                    onCommentsClick={handleCommentsClick}
-                    onAskQuestionClick={handleAskQuestionClick}
-                    onLeaderboardClick={handleLeaderboardClick}
-                  />
-
-                  {/* Content Sections */}
-                  <div className="mt-12 space-y-16">
-                    {/* Curriculum Section */}
-                    {curriculum.length > 0 && (
-                      <CurriculumSection weeks={curriculum} ref={curriculumRef} />
-                    )}
-
-                    {/* Comments Section */}
-                    {comments.length > 0 && (
-                      <CommentsSection comments={comments} ref={commentsRef} />
-                    )}
-                  </div>
-                </div>
-
-                {/* Sidebar */}
-                <div className="col-span-1 h-fit">
-                  <div className="bg-slate-50 rounded-lg p-6 border border-slate-200">
-                    <h3 className="font-semibold text-slate-900 mb-4">Topics for This Course</h3>
-                    <div className="space-y-3">
-                      <div className="h-6 bg-slate-200 rounded w-3/4" />
-                      <div className="h-6 bg-slate-200 rounded w-4/5" />
-                      <div className="h-6 bg-slate-200 rounded w-2/3" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Content Below Wide Mode */}
-              {playerMode === 'wide' && (
-                <div className="mt-12 space-y-16">
-                  <h1 className="text-3xl font-bold text-slate-900">{courseName}</h1>
-                  {curriculum.length > 0 && (
-                    <CurriculumSection weeks={curriculum} ref={curriculumRef} />
-                  )}
-                  {comments.length > 0 && (
-                    <CommentsSection comments={comments} ref={commentsRef} />
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </>
-    )
-  }
-
-  // Mobile Layout with Sticky Header
   return (
     <>
       <AskQuestionModal />
       <LeaderboardModal courseName={courseName} progressPercentage={progressPercentage} />
+      <ExamModal open={examModalOpen} onOpenChange={setExamModalOpen} exam={activeExam} />
+      <PDFViewerModal open={pdfModalOpen} onOpenChange={setPdfModalOpen} pdf={activePdf} />
 
-      {/* Fullscreen Mode */}
-      {playerMode === 'fullscreen' && (
-        <div className="fixed inset-0 z-50 bg-black flex flex-col">
-          <div className="flex-1 flex items-center justify-center">
-            <div className="w-full h-full">
-              <Player videoUrl={videoUrl} isMobile={true} />
+      <div className="min-h-screen bg-white">
+        {/* Desktop-only breadcrumb - mobile/tablet use the back chevron in StickyHeader instead */}
+        <nav aria-label="Breadcrumb" className="hidden lg:block border-b border-slate-200 bg-white sticky top-0 z-30">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem>
+                  <BreadcrumbLink href="#">Home</BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbLink href="#">Courses</BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>Course Details</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+          </div>
+        </nav>
+
+        <div className={`px-4 sm:px-6 py-6 lg:py-8 ${isWide ? 'lg:px-8' : 'lg:max-w-7xl lg:mx-auto lg:px-8'}`}>
+          <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 mb-6 lg:mb-8">{courseName}</h1>
+
+          <div className={isWide ? 'space-y-16' : 'grid gap-8 grid-cols-1 lg:grid-cols-3'}>
+            {/* Video + materials - same row as progress/curriculum on large screens */}
+            <div className={isWide ? 'space-y-8' : 'lg:col-span-2 space-y-8'}>
+              <StickyHeader onBack={onBack}>
+                <PlayerSection
+                  videoUrl={videoUrl}
+                  onCurriculumClick={handleCurriculumClick}
+                  onCommentsClick={handleCommentsClick}
+                  onAskQuestionClick={() => setAskQuestionOpen(true)}
+                  onLeaderboardClick={() => setLeaderboardOpen(true)}
+                />
+              </StickyHeader>
+
+              <CourseMaterials {...materials} />
             </div>
-          </div>
-          <div className="bg-black border-t border-slate-700">
-            <PlayerControls
-              isMobile={true}
-              onCurriculumClick={handleCurriculumClick}
-              onCommentsClick={handleCommentsClick}
-              onAskQuestionClick={handleAskQuestionClick}
-              onLeaderboardClick={handleLeaderboardClick}
-            />
-          </div>
-        </div>
-      )}
 
-      {/* Normal Mobile Layout with Sticky Header */}
-      {playerMode !== 'fullscreen' && (
-        <div className="min-h-screen bg-white pb-20">
-          {/* Sticky Player Header */}
-          <StickyHeader onBack={onBack}>
-            <div className="w-full space-y-2">
-              <div className="rounded-lg overflow-hidden bg-black h-40 border border-slate-200">
-                <Player videoUrl={videoUrl} isMobile={true} />
-              </div>
-              <PlayerControls
-                isMobile={true}
-                onCurriculumClick={handleCurriculumClick}
-                onCommentsClick={handleCommentsClick}
-                onAskQuestionClick={handleAskQuestionClick}
-                onLeaderboardClick={handleLeaderboardClick}
+            {/* Progress + curriculum - beside the video on large screens, stacked below it on mobile */}
+            <div className={isWide ? 'space-y-16' : 'lg:col-span-1 space-y-8'}>
+              <CourseProgress progressPercentage={progressPercentage} />
+              <CurriculumSection
+                weeks={curriculum}
+                ref={curriculumRef}
+                onQuizClick={handleQuizClick}
+                onResourceClick={handleResourceClick}
               />
             </div>
-          </StickyHeader>
 
-          {/* Page Content */}
-          <div className="px-4 py-6">
-            <h1 className="text-2xl font-bold text-slate-900 mb-8">{courseName}</h1>
-
-            <div className="space-y-12">
-              {/* Curriculum Section */}
-              {curriculum.length > 0 && (
-                <CurriculumSection weeks={curriculum} isMobile={true} ref={curriculumRef} />
-              )}
-
-              {/* Comments Section */}
-              {comments.length > 0 && (
-                <CommentsSection comments={comments} ref={commentsRef} />
-              )}
+            <div className={isWide ? '' : 'lg:col-span-3'}>
+              <CommentsSection comments={comments} ref={commentsRef} />
             </div>
           </div>
         </div>
-      )}
+      </div>
     </>
   )
 }

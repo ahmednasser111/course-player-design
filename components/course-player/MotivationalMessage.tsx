@@ -18,6 +18,7 @@ export function MotivationalMessage({ progressPercentage }: MotivationalMessageP
         <p className="text-2xl text-slate-600 font-mono">
           {motivationalData.emoticon}
         </p>
+        <p className="mt-3 text-xs text-slate-400">— Eng. Ali Shaheen</p>
       </div>
     </div>
   )

@@ -1,35 +1,34 @@
 'use client'
 
 import { useState } from 'react'
-import { ChevronDown, PlayCircle, HelpCircle, Clock } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { ChevronDown, FileText, Lock } from 'lucide-react'
 
 interface CurriculumItem {
   id: string
   title: string
   duration?: string
   questions?: number
+  minutes?: number
   type?: 'lesson' | 'quiz'
   completed?: boolean
+  pdfUrl?: string
 }
 
 interface CurriculumWeek {
   week: string
+  description?: string
   items: CurriculumItem[]
 }
 
 interface CurriculumSectionProps {
   weeks: CurriculumWeek[]
-  isMobile?: boolean
-  ref?: React.RefObject<HTMLDivElement>
+  ref?: React.RefObject<HTMLDivElement | null>
+  onQuizClick?: (item: CurriculumItem) => void
+  onResourceClick?: (item: CurriculumItem) => void
 }
 
-export function CurriculumSection({
-  weeks,
-  isMobile = false,
-  ref,
-}: CurriculumSectionProps) {
-  const [expandedWeeks, setExpandedWeeks] = useState<Set<string>>(new Set(['week-1']))
+export function CurriculumSection({ weeks, ref, onQuizClick, onResourceClick }: CurriculumSectionProps) {
+  const [expandedWeeks, setExpandedWeeks] = useState<Set<string>>(new Set(['week-0']))
 
   const toggleWeek = (weekId: string) => {
     const newExpanded = new Set(expandedWeeks)
@@ -42,68 +41,90 @@ export function CurriculumSection({
   }
 
   return (
-    <div ref={ref} className="w-full">
+    <div
+      ref={ref}
+      tabIndex={-1}
+      className="w-full scroll-mt-20 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-primary"
+    >
       <h2 className="text-2xl font-bold text-slate-900 mb-6">Curriculum</h2>
 
-      <div className="space-y-4">
+      <div className="space-y-6">
         {weeks.map((weekGroup, idx) => {
           const weekId = `week-${idx}`
           const isExpanded = expandedWeeks.has(weekId)
 
           return (
-            <div key={weekId} className="border border-slate-200 rounded-lg overflow-hidden">
+            <div key={weekId} className="border border-slate-200 rounded-xl overflow-hidden bg-white">
               <button
+                type="button"
                 onClick={() => toggleWeek(weekId)}
-                className="w-full flex items-center justify-between p-4 hover:bg-slate-50 transition-colors"
+                aria-expanded={isExpanded}
+                className="w-full flex items-start justify-between gap-4 p-6 text-left hover:bg-slate-50 transition-colors"
               >
-                <h3 className="font-semibold text-slate-900">{weekGroup.week}</h3>
+                <div>
+                  <h3 className="text-2xl font-bold text-slate-900">{weekGroup.week}</h3>
+                  {weekGroup.description && (
+                    <p className="text-sm text-slate-500 mt-2 leading-relaxed max-w-xl">{weekGroup.description}</p>
+                  )}
+                </div>
                 <ChevronDown
-                  className={`w-5 h-5 text-slate-600 transition-transform ${
-                    isExpanded ? 'rotate-180' : ''
-                  }`}
+                  className={`w-5 h-5 text-slate-400 shrink-0 mt-1 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                  aria-hidden="true"
                 />
               </button>
 
               {isExpanded && (
-                <div className="border-t border-slate-200 bg-slate-50">
-                  {weekGroup.items.map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex items-start gap-3 p-4 border-b last:border-b-0 border-slate-200 hover:bg-white transition-colors"
-                    >
-                      <div className="mt-1">
-                        {item.type === 'quiz' ? (
-                          <HelpCircle className="w-5 h-5 text-orange-500" />
+                <div className="border-t border-slate-200 divide-y divide-slate-200">
+                  {weekGroup.items.map((item) => {
+                    const isQuiz = item.type === 'quiz'
+                    const isResource = Boolean(item.pdfUrl)
+                    const isClickable = (isQuiz && Boolean(onQuizClick)) || (isResource && Boolean(onResourceClick))
+
+                    const rowContent = (
+                      <>
+                        <FileText className="w-5 h-5 text-slate-700 shrink-0" aria-hidden="true" />
+                        <span className="flex-1 font-medium text-slate-800">{item.title}</span>
+
+                        {isQuiz ? (
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="px-3 py-1 rounded-full bg-teal-50 text-teal-600 text-xs font-semibold tracking-wide whitespace-nowrap">
+                              {item.questions ?? 0} QUESTION
+                            </span>
+                            {item.minutes != null && (
+                              <span className="px-3 py-1 rounded-full bg-rose-50 text-rose-500 text-xs font-semibold tracking-wide whitespace-nowrap">
+                                {item.minutes} MINUTES
+                              </span>
+                            )}
+                          </div>
+                        ) : isResource ? (
+                          <span className="px-3 py-1 rounded-full bg-purple-50 text-purple-600 text-xs font-semibold tracking-wide whitespace-nowrap shrink-0">
+                            VIEW PDF
+                          </span>
                         ) : (
-                          <PlayCircle className="w-5 h-5 text-blue-500" />
+                          <Lock className="w-5 h-5 text-slate-400 shrink-0" aria-hidden="true" />
                         )}
-                      </div>
+                      </>
+                    )
 
-                      <div className="flex-1">
-                        <p className="font-medium text-slate-900">{item.title}</p>
-                        <div className="flex items-center gap-4 mt-2 text-sm text-slate-600">
-                          {item.duration && (
-                            <div className="flex items-center gap-1">
-                              <Clock className="w-4 h-4" />
-                              {item.duration}
-                            </div>
-                          )}
-                          {item.questions && (
-                            <div className="flex items-center gap-1">
-                              <HelpCircle className="w-4 h-4" />
-                              {item.questions} questions
-                            </div>
-                          )}
-                        </div>
-                      </div>
+                    if (isClickable) {
+                      return (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => (isQuiz ? onQuizClick?.(item) : onResourceClick?.(item))}
+                          className="w-full flex items-center gap-4 px-6 py-5 text-left hover:bg-slate-50 cursor-pointer transition-colors"
+                        >
+                          {rowContent}
+                        </button>
+                      )
+                    }
 
-                      {item.completed && (
-                        <div className="flex-shrink-0 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
-                          <span className="text-white text-xs font-bold">✓</span>
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                    return (
+                      <div key={item.id} className="flex items-center gap-4 px-6 py-5">
+                        {rowContent}
+                      </div>
+                    )
+                  })}
                 </div>
               )}
             </div>

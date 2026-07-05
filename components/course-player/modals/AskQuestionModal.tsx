@@ -16,7 +16,7 @@ export function AskQuestionModal() {
 
   // Load draft when modal opens
   useEffect(() => {
-    if (askQuestionOpen && draft.title) {
+    if (askQuestionOpen && (draft.title || draft.description)) {
       setTitle(draft.title)
       setDescription(draft.description)
     }
@@ -49,10 +49,11 @@ export function AskQuestionModal() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
+            <label htmlFor="question-title" className="block text-sm font-medium text-slate-700 mb-2">
               Question Title
             </label>
             <Input
+              id="question-title"
               placeholder="What's your question about?"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -62,10 +63,11 @@ export function AskQuestionModal() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
+            <label htmlFor="question-description" className="block text-sm font-medium text-slate-700 mb-2">
               Question Description
             </label>
             <Textarea
+              id="question-description"
               placeholder="Provide more details about your question..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -83,7 +85,7 @@ export function AskQuestionModal() {
             >
               Cancel
             </Button>
-            <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white">
+            <Button type="submit" className="bg-primary hover:bg-primary/90 text-primary-foreground">
               Post Question
             </Button>
           </div>

@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, ReactNode } from 'react'
 
-export type PlayerMode = 'normal' | 'wide' | 'fullscreen'
+export type PlayerMode = 'normal' | 'wide'
 
 interface CoursePlayerContextType {
   playerMode: PlayerMode
@@ -11,8 +11,6 @@ interface CoursePlayerContextType {
   setAskQuestionOpen: (open: boolean) => void
   leaderboardOpen: boolean
   setLeaderboardOpen: (open: boolean) => void
-  scrollTarget: string | null
-  setScrollTarget: (target: string | null) => void
 }
 
 const CoursePlayerContext = createContext<CoursePlayerContextType | undefined>(undefined)
@@ -21,7 +19,6 @@ export function CoursePlayerProvider({ children }: { children: ReactNode }) {
   const [playerMode, setPlayerMode] = useState<PlayerMode>('normal')
   const [askQuestionOpen, setAskQuestionOpen] = useState(false)
   const [leaderboardOpen, setLeaderboardOpen] = useState(false)
-  const [scrollTarget, setScrollTarget] = useState<string | null>(null)
 
   return (
     <CoursePlayerContext.Provider
@@ -32,8 +29,6 @@ export function CoursePlayerProvider({ children }: { children: ReactNode }) {
         setAskQuestionOpen,
         leaderboardOpen,
         setLeaderboardOpen,
-        scrollTarget,
-        setScrollTarget,
       }}
     >
       {children}

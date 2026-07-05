@@ -7,6 +7,7 @@ import { CoursePlayerProvider } from '@/hooks/useCoursePlayerState'
 const mockCurriculum = [
   {
     week: 'Week 1-4',
+    description: 'Advanced story telling techniques for writers: Personas, Characters & Plots',
     items: [
       {
         id: '1',
@@ -26,6 +27,7 @@ const mockCurriculum = [
         id: '3',
         title: 'Course Overview Quiz',
         questions: 5,
+        minutes: 10,
         type: 'quiz' as const,
       },
       {
@@ -33,6 +35,7 @@ const mockCurriculum = [
         title: 'Course Exercise / Reference Files',
         duration: '08 min',
         type: 'lesson' as const,
+        pdfUrl: '/sample-course-material.pdf',
       },
       {
         id: '5',
@@ -50,6 +53,7 @@ const mockCurriculum = [
   },
   {
     week: 'Week 5-8',
+    description: 'Advanced story telling techniques for writers: Personas, Characters & Plots',
     items: [
       {
         id: '7',
@@ -68,6 +72,7 @@ const mockCurriculum = [
         title: 'Return Values From Functions',
         duration: '10 min',
         questions: 2,
+        minutes: 15,
         type: 'quiz' as const,
       },
       {
@@ -92,6 +97,14 @@ const mockCurriculum = [
   },
 ]
 
+const mockMaterials = {
+  instructor: 'Edward Norton',
+  duration: '3 weeks',
+  lessons: 8,
+  enrolled: 65,
+  language: 'English',
+}
+
 const mockComments = [
   {
     id: '1',
@@ -100,6 +113,7 @@ const mockComments = [
     content:
       'Lorem ipsum dolor sit amet, consectetur adipisicing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
     avatar: undefined,
+    rating: 5,
   },
   {
     id: '2',
@@ -108,6 +122,7 @@ const mockComments = [
     content:
       'Lorem ipsum dolor sit amet, consectetur adipisicing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
     avatar: undefined,
+    rating: 5,
   },
   {
     id: '3',
@@ -116,6 +131,7 @@ const mockComments = [
     content:
       'Lorem ipsum dolor sit amet, consectetur adipisicing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
     avatar: undefined,
+    rating: 5,
   },
 ]
 
@@ -128,6 +144,7 @@ export default function Page() {
         progressPercentage={45}
         curriculum={mockCurriculum}
         comments={mockComments}
+        materials={mockMaterials}
       />
     </CoursePlayerProvider>
   )
